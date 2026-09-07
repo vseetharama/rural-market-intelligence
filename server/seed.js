@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const MarketData = require('./models/MarketData');
 const User = require('./models/User');
 const ProductListing = require('./models/ProductListing');
@@ -66,57 +65,6 @@ const sampleMarketData = [
   { product: 'Coconut', category: 'Other', price: 26, quantity: 200, unit: 'piece', demand: 180, location: 'Udupi', date: '2026-09-06' },
 ];
 
-const sampleUsers = [
-  {
-    name: 'Demo Farmer One',
-    email: 'farmer1@example.com',
-    phone: '9000000001',
-    password: 'password123',
-    role: 'FARMER',
-    location: 'Kundapura',
-  },
-  {
-    name: 'Demo Farmer Two',
-    email: 'farmer2@example.com',
-    phone: '9000000002',
-    password: 'password123',
-    role: 'FARMER',
-    location: 'Udupi',
-  },
-  {
-    name: 'Demo Farmer Three',
-    email: 'farmer3@example.com',
-    phone: '9000000003',
-    password: 'password123',
-    role: 'FARMER',
-    location: 'Karkala',
-  },
-  {
-    name: 'Demo Buyer One',
-    email: 'buyer1@example.com',
-    phone: '9000000004',
-    password: 'password123',
-    role: 'BUYER',
-    location: 'Mangalore',
-  },
-  {
-    name: 'Demo Buyer Two',
-    email: 'buyer2@example.com',
-    phone: '9000000005',
-    password: 'password123',
-    role: 'BUYER',
-    location: 'Udupi',
-  },
-  {
-    name: 'Demo Vendor One',
-    email: 'vendor1@example.com',
-    phone: '9000000006',
-    password: 'password123',
-    role: 'VENDOR',
-    location: 'Mangalore',
-  },
-];
-
 async function seedDatabase() {
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/rural_market_intelligence';
 
@@ -124,165 +72,28 @@ async function seedDatabase() {
     await mongoose.connect(uri);
     console.log('Connected to MongoDB');
 
+    // Clear ALL collections for fresh start
     await Promise.all([
       PurchaseRequest.deleteMany({}),
       ProductListing.deleteMany({}),
-      MarketData.deleteMany({}),
       User.deleteMany({}),
+      MarketData.deleteMany({}),
     ]);
-    console.log('Cleared existing users, listings, requests, and market data');
+    console.log('✓ Cleared existing users, listings, purchase requests, and market data');
 
-    const users = [];
-    for (const sample of sampleUsers) {
-      const passwordHash = await bcrypt.hash(sample.password, 10);
-      users.push(
-        await User.create({
-          name: sample.name,
-          email: sample.email,
-          phone: sample.phone,
-          passwordHash,
-          role: sample.role,
-          location: sample.location,
-        })
-      );
-    }
-    console.log(`Inserted ${users.length} sample users`);
-
-    const [farmer1, farmer2, farmer3, buyer1, , vendor1] = users;
-
-    const listings = await ProductListing.insertMany([
-      {
-        seller: farmer1._id,
-        product: 'Tomato',
-        category: 'Vegetable',
-        description: 'Fresh locally grown tomatoes from Kundapura farms.',
-        quantity: 500,
-        unit: 'kg',
-        price: 30,
-        location: 'Kundapura',
-        availableFrom: '2026-09-07',
-        status: 'ACTIVE',
-      },
-      {
-        seller: farmer2._id,
-        product: 'Tomato',
-        category: 'Vegetable',
-        description: 'Ripe tomatoes suitable for wholesale buyers.',
-        quantity: 300,
-        unit: 'kg',
-        price: 32,
-        location: 'Udupi',
-        availableFrom: '2026-09-06',
-        status: 'ACTIVE',
-      },
-      {
-        seller: farmer2._id,
-        product: 'Rice',
-        category: 'Grain',
-        description: 'Cleaned rice ready for bulk purchase.',
-        quantity: 800,
-        unit: 'kg',
-        price: 46,
-        location: 'Udupi',
-        availableFrom: '2026-09-05',
-        status: 'ACTIVE',
-      },
-      {
-        seller: farmer3._id,
-        product: 'Onion',
-        category: 'Vegetable',
-        description: 'Medium-sized onions from Karkala.',
-        quantity: 400,
-        unit: 'kg',
-        price: 28,
-        location: 'Karkala',
-        availableFrom: '2026-09-07',
-        status: 'ACTIVE',
-      },
-      {
-        seller: farmer3._id,
-        product: 'Banana',
-        category: 'Fruit',
-        description: 'Fresh bananas available by the dozen.',
-        quantity: 120,
-        unit: 'dozen',
-        price: 36,
-        location: 'Karkala',
-        availableFrom: '2026-09-06',
-        status: 'ACTIVE',
-      },
-      {
-        seller: vendor1._id,
-        product: 'Potato',
-        category: 'Vegetable',
-        description: 'Vendor stock for local retailers.',
-        quantity: 600,
-        unit: 'kg',
-        price: 22,
-        location: 'Mangalore',
-        availableFrom: '2026-09-07',
-        status: 'ACTIVE',
-      },
-      {
-        seller: vendor1._id,
-        product: 'Pulses',
-        category: 'Grain',
-        description: 'Quality pulses for kitchens and shops.',
-        quantity: 250,
-        unit: 'kg',
-        price: 93,
-        location: 'Mangalore',
-        availableFrom: '2026-09-05',
-        status: 'ACTIVE',
-      },
-      {
-        seller: farmer1._id,
-        product: 'Coconut',
-        category: 'Other',
-        description: 'Mature coconuts from coastal farms.',
-        quantity: 350,
-        unit: 'piece',
-        price: 27,
-        location: 'Kundapura',
-        availableFrom: '2026-09-07',
-        status: 'ACTIVE',
-      },
-    ]);
-    console.log(`Inserted ${listings.length} sample listings`);
-
-    await PurchaseRequest.insertMany([
-      {
-        buyer: buyer1._id,
-        seller: farmer1._id,
-        listing: listings[0]._id,
-        quantity: 100,
-        offeredPrice: 29,
-        message: 'Interested in 100 kg tomatoes this week.',
-        status: 'PENDING',
-      },
-      {
-        buyer: vendor1._id,
-        seller: farmer2._id,
-        listing: listings[2]._id,
-        quantity: 200,
-        offeredPrice: 45,
-        message: 'Need rice stock for shop.',
-        status: 'PENDING',
-      },
-    ]);
-    console.log('Inserted sample purchase requests');
-
+    // Seed fresh MarketData - the original market intelligence data
     const marketInserted = await MarketData.insertMany(sampleMarketData);
-    console.log(`Inserted ${marketInserted.length} sample market records`);
+    console.log(`✓ Inserted ${marketInserted.length} sample market records`);
 
-    console.log('\nDemo login accounts (password: password123):');
-    sampleUsers.forEach((user) => {
-      console.log(`- ${user.role}: ${user.email}`);
-    });
+    console.log('\n✓ Seed completed successfully');
+    console.log('\nDatabase state:');
+    console.log('  Users: 0 (create your own via registration)');
+    console.log('  ProductListings: 0 (create via application)');
+    console.log('  PurchaseRequests: 0 (create via application)');
+    console.log(`  MarketData: ${marketInserted.length} (historical market intelligence data)`);
 
     await mongoose.disconnect();
     console.log('\nDisconnected from MongoDB');
-    console.log('Seed completed successfully');
   } catch (error) {
     console.error('Seed failed:', error.message);
     process.exit(1);
