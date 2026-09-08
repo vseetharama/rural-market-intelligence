@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import MarketData from './pages/MarketData';
 import Analytics from './pages/Analytics';
 import Marketplace from './pages/Marketplace';
+import SellProduct from './pages/SellProduct';
 import MyListings from './pages/MyListings';
 import MyRequests from './pages/MyRequests';
 import Profile from './pages/Profile';
@@ -35,6 +36,7 @@ function App() {
             </Route>
 
             <Route element={<ProtectedRoute roles={['FARMER', 'VENDOR']} />}>
+              <Route path="/sell-product" element={<SellProduct />} />
               <Route path="/my-listings" element={<MyListings />} />
             </Route>
           </Routes>

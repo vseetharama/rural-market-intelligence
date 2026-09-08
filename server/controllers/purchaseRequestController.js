@@ -8,7 +8,7 @@ function isValidObjectId(id) {
 
 async function createPurchaseRequest(req, res) {
   try {
-    if (!['BUYER', 'VENDOR'].includes(req.user.role)) {
+    if (!['BUYER', 'VENDOR', 'FARMER'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Only buyers and vendors can send purchase requests' });
     }
 

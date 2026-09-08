@@ -93,7 +93,7 @@ function Marketplace() {
   }
 
   const canBuy =
-    isAuthenticated && user && ['BUYER', 'VENDOR'].includes(user.role) && selected
+    isAuthenticated && user && ['BUYER', 'VENDOR', 'FARMER'].includes(user.role) && selected
       ? selected.seller?._id !== user.id && selected.seller?._id !== user._id
       : false;
 

@@ -14,6 +14,7 @@ function Sidebar() {
 
   if (isAuthenticated) {
     if (user && ['FARMER', 'VENDOR'].includes(user.role)) {
+      links.push({ to: '/sell-product', label: 'Sell Product' });
       links.push({ to: '/my-listings', label: 'My Listings' });
     }
     links.push({ to: '/my-requests', label: 'My Requests' });
