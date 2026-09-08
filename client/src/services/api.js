@@ -204,3 +204,26 @@ export function getStockAdvice() {
     body: JSON.stringify({}),
   });
 }
+
+export function getNotifications(skip = 0, limit = 20) {
+  const params = new URLSearchParams();
+  params.set('skip', skip);
+  params.set('limit', limit);
+  return request(`/notifications?${params.toString()}`);
+}
+
+export function getUnreadNotificationCount() {
+  return request('/notifications/unread-count');
+}
+
+export function markNotificationAsRead(id) {
+  return request(`/notifications/${id}/read`, {
+    method: 'PUT',
+  });
+}
+
+export function markAllNotificationsAsRead() {
+  return request('/notifications/read-all', {
+    method: 'PATCH',
+  });
+}

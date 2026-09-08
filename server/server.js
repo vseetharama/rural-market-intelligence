@@ -8,6 +8,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const listingRoutes = require('./routes/listingRoutes');
 const purchaseRequestRoutes = require('./routes/purchaseRequestRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/market-data', marketDataRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/purchase-requests', purchaseRequestRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', aiRoutes);
 
 app.use((req, res) => {

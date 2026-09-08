@@ -4,13 +4,16 @@ import {
   getSellingRequests,
   updatePurchaseRequestStatus,
 } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function MyRequests() {
+  const { user } = useAuth();
   const [buying, setBuying] = useState([]);
   const [selling, setSelling] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const canSell = ['FARMER', 'VENDOR'].includes(user?.role);
 
   async function loadRequests() {
     try {
@@ -89,57 +92,59 @@ function MyRequests() {
         </div>
       </section>
 
-      <section className="panel">
-        <h2>Selling Requests</h2>
-        {!loading && selling.length === 0 ? (
-          <p className="empty-text">No selling requests yet.</p>
-        ) : null}
-        <div className="request-list">
-          {selling.map((request) => (
-            <article key={request._id} className="request-card">
-              <div className="panel-header">
-                <h3>{request.listing?.product || 'Product'}</h3>
-                <span className={`status-pill status-${request.status.toLowerCase()}`}>
-                  {request.status}
-                </span>
-              </div>
-              <p>
-                Buyer: {request.buyer?.name} · Requested {request.quantity}{' '}
-                {request.listing?.unit}
-              </p>
-              <p>Offered price: ₹{request.offeredPrice}</p>
-              {request.message ? <p className="empty-text">{request.message}</p> : null}
-              {request.status === 'PENDING' ? (
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => updateStatus(request._id, 'ACCEPTED')}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => updateStatus(request._id, 'REJECTED')}
-                  >
-                    Reject
-                  </button>
+      {canSell ? (
+        <section className="panel">
+          <h2>Selling Requests</h2>
+          {!loading && selling.length === 0 ? (
+            <p className="empty-text">No selling requests yet.</p>
+          ) : null}
+          <div className="request-list">
+            {selling.map((request) => (
+              <article key={request._id} className="request-card">
+                <div className="panel-header">
+                  <h3>{request.listing?.product || 'Product'}</h3>
+                  <span className={`status-pill status-${request.status.toLowerCase()}`}>
+                    {request.status}
+                  </span>
                 </div>
-              ) : null}
-              {request.status === 'ACCEPTED' ? (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => updateStatus(request._id, 'COMPLETED')}
-                >
-                  Mark Completed
-                </button>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      </section>
+                <p>
+                  Buyer: {request.buyer?.name} · Requested {request.quantity}{' '}
+                  {request.listing?.unit}
+                </p>
+                <p>Offered price: ₹{request.offeredPrice}</p>
+                {request.message ? <p className="empty-text">{request.message}</p> : null}
+                {request.status === 'PENDING' ? (
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => updateStatus(request._id, 'ACCEPTED')}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => updateStatus(request._id, 'REJECTED')}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                ) : null}
+                {request.status === 'ACCEPTED' ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => updateStatus(request._id, 'COMPLETED')}
+                  >
+                    Mark Completed
+                  </button>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

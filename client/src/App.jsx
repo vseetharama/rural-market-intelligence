@@ -10,6 +10,7 @@ import SellProduct from './pages/SellProduct';
 import MyListings from './pages/MyListings';
 import MyRequests from './pages/MyRequests';
 import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 import AIAssistant from './pages/AIAssistant';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -33,6 +34,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/my-requests" element={<MyRequests />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
 
             <Route element={<ProtectedRoute roles={['FARMER', 'VENDOR']} />}>

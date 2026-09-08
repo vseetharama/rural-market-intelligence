@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -18,6 +19,7 @@ function Navbar() {
       <div className="navbar-actions">
         {isAuthenticated ? (
           <>
+            <NotificationBell />
             <span className="navbar-user">
               {user.name} · {user.role}
             </span>

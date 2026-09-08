@@ -18,6 +18,7 @@ function Sidebar() {
       links.push({ to: '/my-listings', label: 'My Listings' });
     }
     links.push({ to: '/my-requests', label: 'My Requests' });
+    links.push({ to: '/notifications', label: 'Notifications' });
     links.push({ to: '/profile', label: 'Profile' });
   } else {
     links.push({ to: '/login', label: 'Login' });

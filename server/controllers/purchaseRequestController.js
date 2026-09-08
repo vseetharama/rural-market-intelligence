@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const PurchaseRequest = require('../models/PurchaseRequest');
 const ProductListing = require('../models/ProductListing');
+const User = require('../models/User');
+const notificationService = require('../services/notificationService');
 
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -26,7 +28,7 @@ async function createPurchaseRequest(req, res) {
       return res.status(400).json({ message: 'Quantity must be greater than 0' });
     }
 
-    const listing = await ProductListing.findById(listingId);
+    const listing = await ProductListing.findById(listingId).populate('seller', 'role name email');
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
@@ -35,7 +37,7 @@ async function createPurchaseRequest(req, res) {
       return res.status(400).json({ message: 'Listing is not active' });
     }
 
-    if (listing.seller.toString() === req.user._id.toString()) {
+    if (listing.seller._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ message: 'You cannot buy your own listing' });
     }
 
@@ -47,7 +49,7 @@ async function createPurchaseRequest(req, res) {
 
     const purchaseRequest = await PurchaseRequest.create({
       buyer: req.user._id,
-      seller: listing.seller,
+      seller: listing.seller._id,
       listing: listing._id,
       quantity: Number(quantity),
       offeredPrice: offeredPrice !== undefined ? Number(offeredPrice) : listing.price,
@@ -59,6 +61,33 @@ async function createPurchaseRequest(req, res) {
       .populate('buyer', 'name email phone role location')
       .populate('seller', 'name email phone role location')
       .populate('listing');
+
+    // Create notifications (non-blocking)
+    const sellerRole = listing.seller.role;
+
+    setImmediate(async () => {
+      // Notification for buyer
+      await notificationService.createNotification(
+        req.user._id,
+        req.user.role,
+        'ORDER_PLACED',
+        'Order Placed Successfully',
+        `You placed an order for ${quantity} ${listing.unit} of ${listing.product}`,
+        'PurchaseRequest',
+        purchaseRequest._id
+      );
+
+      // Notification for seller
+      await notificationService.createNotification(
+        listing.seller._id,
+        sellerRole,
+        'NEW_ORDER_RECEIVED',
+        'New Order Received',
+        `${req.user.name} ordered ${quantity} ${listing.unit} of ${listing.product}`,
+        'PurchaseRequest',
+        purchaseRequest._id
+      );
+    });
 
     res.status(201).json(populated);
   } catch (error) {
@@ -178,6 +207,47 @@ async function updatePurchaseRequestStatus(req, res) {
       .populate('buyer', 'name email phone role location')
       .populate('seller', 'name email phone role location')
       .populate('listing');
+
+    // Create notifications for status changes (non-blocking)
+    setImmediate(async () => {
+      if (status === 'ACCEPTED') {
+        const listing = await ProductListing.findById(purchaseRequest.listing);
+        const buyer = await User.findById(purchaseRequest.buyer).select('role');
+        await notificationService.createNotification(
+          purchaseRequest.buyer,
+          buyer.role,
+          'ORDER_ACCEPTED',
+          'Order Accepted',
+          `Your order for ${purchaseRequest.quantity} ${listing.unit} of ${listing.product} from ${populated.seller.name} has been accepted`,
+          'PurchaseRequest',
+          purchaseRequest._id
+        );
+      } else if (status === 'REJECTED') {
+        const listing = await ProductListing.findById(purchaseRequest.listing);
+        const buyer = await User.findById(purchaseRequest.buyer).select('role');
+        await notificationService.createNotification(
+          purchaseRequest.buyer,
+          buyer.role,
+          'ORDER_REJECTED',
+          'Order Rejected',
+          `Your order for ${purchaseRequest.quantity} ${listing.unit} of ${listing.product} has been rejected`,
+          'PurchaseRequest',
+          purchaseRequest._id
+        );
+      } else if (status === 'CANCELLED') {
+        const listing = await ProductListing.findById(purchaseRequest.listing);
+        const seller = await User.findById(purchaseRequest.seller).select('role');
+        await notificationService.createNotification(
+          purchaseRequest.seller,
+          seller.role,
+          'ORDER_CANCELLED',
+          'Order Cancelled',
+          `The order for ${purchaseRequest.quantity} ${listing.unit} of ${listing.product} has been cancelled by the buyer`,
+          'PurchaseRequest',
+          purchaseRequest._id
+        );
+      }
+    });
 
     res.status(200).json(populated);
   } catch (error) {
