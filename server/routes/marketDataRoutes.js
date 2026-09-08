@@ -1,4 +1,5 @@
 const express = require('express');
+const { authenticate, requireRoles } = require('../middleware/auth');
 const {
   getAllMarketData,
   getMarketDataById,
@@ -9,10 +10,13 @@ const {
 
 const router = express.Router();
 
+// Public read-only routes (no authentication required)
 router.get('/', getAllMarketData);
 router.get('/:id', getMarketDataById);
-router.post('/', createMarketData);
-router.put('/:id', updateMarketData);
-router.delete('/:id', deleteMarketData);
+
+// Protected write routes (ADMIN only)
+router.post('/', authenticate, requireRoles('ADMIN'), createMarketData);
+router.put('/:id', authenticate, requireRoles('ADMIN'), updateMarketData);
+router.delete('/:id', authenticate, requireRoles('ADMIN'), deleteMarketData);
 
 module.exports = router;

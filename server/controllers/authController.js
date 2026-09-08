@@ -20,6 +20,11 @@ async function register(req, res) {
       return res.status(400).json({ message: 'All registration fields are required' });
     }
 
+    // Reject ADMIN role during registration
+    if (role === 'ADMIN') {
+      return res.status(400).json({ message: 'ADMIN role cannot be assigned during registration' });
+    }
+
     const passwordError = validatePassword(password);
     if (passwordError) {
       return res.status(400).json({ message: passwordError });

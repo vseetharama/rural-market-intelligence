@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import MarketForm from '../components/MarketForm';
 import MarketTable from '../components/MarketTable';
 import {
@@ -9,6 +10,7 @@ import {
 } from '../services/api';
 
 function MarketData() {
+  const { user } = useAuth();
   const [records, setRecords] = useState([]);
   const [filters, setFilters] = useState({
     product: '',
@@ -20,6 +22,7 @@ function MarketData() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const isAdmin = user?.role === 'ADMIN';
 
   async function loadRecords(activeFilters = filters) {
     try {
@@ -122,9 +125,11 @@ function MarketData() {
             View, add, edit, and filter rural market records.
           </p>
         </div>
-        <button type="button" className="btn btn-primary" onClick={startCreate}>
-          Add Market Data
-        </button>
+        {isAdmin ? (
+          <button type="button" className="btn btn-primary" onClick={startCreate}>
+            Add Market Data
+          </button>
+        ) : null}
       </div>
 
       {message ? <p className="status-message success">{message}</p> : null}
@@ -192,6 +197,7 @@ function MarketData() {
             records={records}
             onEdit={startEdit}
             onDelete={handleDelete}
+            canEdit={isAdmin}
           />
         )}
       </section>

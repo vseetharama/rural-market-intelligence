@@ -8,7 +8,7 @@ function formatDate(value) {
   });
 }
 
-function MarketTable({ records, onEdit, onDelete, showActions = true }) {
+function MarketTable({ records, onEdit, onDelete, showActions = true, canEdit = false }) {
   if (!records || records.length === 0) {
     return (
       <div className="empty-state">
@@ -30,7 +30,7 @@ function MarketTable({ records, onEdit, onDelete, showActions = true }) {
             <th>Demand</th>
             <th>Location</th>
             <th>Date</th>
-            {showActions ? <th>Actions</th> : null}
+            {showActions && canEdit ? <th>Actions</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@ function MarketTable({ records, onEdit, onDelete, showActions = true }) {
               </td>
               <td data-label="Location">{record.location}</td>
               <td data-label="Date">{formatDate(record.date)}</td>
-              {showActions ? (
+              {showActions && canEdit ? (
                 <td data-label="Actions" className="actions-cell">
                   <button
                     type="button"

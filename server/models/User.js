@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const ROLES = ['FARMER', 'BUYER', 'VENDOR'];
+const ROLES = ['FARMER', 'BUYER', 'VENDOR', 'ADMIN'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: {
         values: ROLES,
-        message: 'Role must be FARMER, BUYER, or VENDOR',
+        message: 'Role must be FARMER, BUYER, VENDOR, or ADMIN',
       },
       required: [true, 'Role is required'],
     },
