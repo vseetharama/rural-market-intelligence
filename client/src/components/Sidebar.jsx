@@ -7,20 +7,35 @@ function Sidebar() {
   const links = [
     { to: '/', label: 'Dashboard' },
     { to: '/market-data', label: 'Market Data' },
-    { to: '/marketplace', label: 'Marketplace' },
-    { to: '/analytics', label: 'Analytics' },
-    { to: '/ai', label: 'AI Market Assistant' },
   ];
 
-  if (isAuthenticated) {
-    if (user && ['FARMER', 'VENDOR'].includes(user.role)) {
-      links.push({ to: '/sell-product', label: 'Sell Product' });
-      links.push({ to: '/my-listings', label: 'My Listings' });
+  // Add role-specific links
+  if (isAuthenticated && user) {
+    if (user.role === 'ADMIN') {
+      links.push({ to: '/admin/dashboard', label: 'Admin Dashboard' });
+      links.push({ to: '/admin/users', label: 'Users' });
+      links.push({ to: '/admin/market-data', label: 'Manage Market Data' });
+    } else {
+      links.push({ to: '/marketplace', label: 'Marketplace' });
+      links.push({ to: '/where-should-i-sell', label: 'Where Should I Sell?' });
+      links.push({ to: '/analytics', label: 'Analytics' });
+      links.push({ to: '/ai', label: 'AI Market Assistant' });
+
+      if (['FARMER', 'VENDOR'].includes(user.role)) {
+        links.push({ to: '/sell-product', label: 'Sell Product' });
+        links.push({ to: '/my-listings', label: 'My Listings' });
+      }
+
+      links.push({ to: '/my-requests', label: 'My Requests' });
+      links.push({ to: '/notifications', label: 'Notifications' });
     }
-    links.push({ to: '/my-requests', label: 'My Requests' });
-    links.push({ to: '/notifications', label: 'Notifications' });
+
     links.push({ to: '/profile', label: 'Profile' });
   } else {
+    links.push({ to: '/marketplace', label: 'Marketplace' });
+    links.push({ to: '/where-should-i-sell', label: 'Where Should I Sell?' });
+    links.push({ to: '/analytics', label: 'Analytics' });
+    links.push({ to: '/ai', label: 'AI Market Assistant' });
     links.push({ to: '/login', label: 'Login' });
     links.push({ to: '/register', label: 'Register' });
   }

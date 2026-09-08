@@ -227,3 +227,106 @@ export function markAllNotificationsAsRead() {
     method: 'PATCH',
   });
 }
+
+export function forgotPassword(data) {
+  return request('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function resetPassword(data) {
+  return request('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function initiatePasswordReset(data) {
+  return request('/auth/initiate-password-reset', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getAdminUsers() {
+  return request('/admin/users');
+}
+
+export function getAdminUserById(id) {
+  return request(`/admin/users/${id}`);
+}
+
+export function getAdminStats() {
+  return request('/admin/stats');
+}
+
+export function compareMarkets(product, quantity, unit, location) {
+  return request('/market-comparison/compare', {
+    method: 'POST',
+    body: JSON.stringify({
+      product,
+      quantity,
+      unit,
+      location
+    })
+  });
+}
+
+export function getDistinctProducts() {
+  return request('/analytics/products');
+}
+
+export function getDistinctLocations() {
+  return request('/market-data');
+}
+
+export function getProductUnits(product) {
+  return request(`/analytics/product/${encodeURIComponent(product)}`);
+}
+
+export const api = {
+  register,
+  login,
+  getCurrentUser,
+  updateProfile,
+  getMarketData,
+  getMarketDataById,
+  createMarketData,
+  updateMarketData,
+  deleteMarketData,
+  getDashboardSummary,
+  getProductAnalytics,
+  getProducts,
+  getListings,
+  getListing,
+  getMyListings,
+  createListing,
+  updateListing,
+  deleteListing,
+  createPurchaseRequest,
+  getMyPurchaseRequests,
+  getSellingRequests,
+  updatePurchaseRequestStatus,
+  askAI,
+  getSellAdvice,
+  getStockAdvice,
+  getNotifications,
+  getUnreadNotificationCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  forgotPassword,
+  resetPassword,
+  initiatePasswordReset,
+  getAdminUsers,
+  getAdminUserById,
+  getAdminStats,
+  compareMarkets,
+  getDistinctProducts,
+  getDistinctLocations,
+  getProductUnits,
+  get: (path) => request(path),
+  post: (path, data) => request(path, { method: 'POST', body: JSON.stringify(data) }),
+  put: (path, data) => request(path, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (path) => request(path, { method: 'DELETE' }),
+};

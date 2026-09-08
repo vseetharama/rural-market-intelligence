@@ -63,6 +63,9 @@ function Login() {
         <p className="auth-switch">
           New here? <Link to="/register">Create an account</Link>
         </p>
+        <p className="auth-switch">
+          <Link to="/forgot-password">Forgot Password?</Link>
+        </p>
         <p className="empty-text">
           Demo: farmer1@example.com / password123
         </p>

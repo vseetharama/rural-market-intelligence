@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { signToken } = require('../middleware/auth');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 function validatePassword(password) {
   if (!password || typeof password !== 'string') {
@@ -129,9 +131,125 @@ async function updateProfile(req, res) {
   }
 }
 
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenHash = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+      user.passwordResetToken = resetTokenHash;
+      user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
+      await user.save();
+
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      await sendPasswordResetEmail(user.email, resetToken, clientUrl);
+    }
+
+    res.status(200).json({
+      message: 'If the account exists, a password reset link has been sent.',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to process password reset request' });
+  }
+}
+
+async function resetPassword(req, res) {
+  try {
+    const { token, newPassword, confirmPassword } = req.body;
+
+    if (!token || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Token, new password, and confirmation are required' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError });
+    }
+
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: resetTokenHash,
+      passwordResetExpires: { $gt: Date.now() },
+    }).select('+passwordResetToken +passwordResetExpires');
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = passwordHash;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      message: 'Password has been reset successfully',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to reset password' });
+  }
+}
+
+async function initiatePasswordReset(req, res) {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const user = await User.findById(userId).select('+passwordResetToken +passwordResetExpires');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    user.passwordResetToken = resetTokenHash;
+    user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
+    await user.save();
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    await sendPasswordResetEmail(user.email, resetToken, clientUrl);
+
+    res.status(200).json({
+      message: 'Password reset email has been sent to the user',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to initiate password reset' });
+  }
+}
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
+  forgotPassword,
+  resetPassword,
+  initiatePasswordReset,
 };

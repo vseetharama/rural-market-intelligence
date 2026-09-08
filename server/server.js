@@ -6,10 +6,12 @@ const connectDatabase = require('./config/database');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const listingRoutes = require('./routes/listingRoutes');
 const purchaseRequestRoutes = require('./routes/purchaseRequestRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const comparisonRoutes = require('./routes/comparisonRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,12 +26,14 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/market-data', marketDataRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/purchase-requests', purchaseRequestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/market-comparison', comparisonRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

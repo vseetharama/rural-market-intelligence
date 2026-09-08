@@ -8,3 +8,6 @@ build/
 .DS_Store
 .vite/
 coverage/
+.agent/
+.kiro/
+.vscode/
