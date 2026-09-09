@@ -3,7 +3,6 @@ import {
   compareMarkets,
   getMyListings,
   getDistinctLocations,
-  getProductUnits,
 } from '../services/api';
 
 function WhereShoudISell() {
@@ -17,6 +16,7 @@ function WhereShoudISell() {
   const [products, setProducts] = useState([]);
   const [locations, setLocations] = useState([]);
   const [units, setUnits] = useState([]);
+  const [activeListings, setActiveListings] = useState([]);
   const [comparisonResults, setComparisonResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,19 +29,23 @@ function WhereShoudISell() {
         const listings = await getMyListings();
         
         // Filter for ACTIVE listings only
-        const activeListings = Array.isArray(listings)
+        const active = Array.isArray(listings)
           ? listings.filter(listing => listing.status === 'ACTIVE')
           : [];
 
-        if (activeListings.length === 0) {
+        if (active.length === 0) {
           setNoActiveListings(true);
           setProducts([]);
+          setActiveListings([]);
           setError('No active products available. Create a listing first.');
           return;
         }
 
+        // Store active listings for unit lookup
+        setActiveListings(active);
+
         // Extract unique product names from active listings
-        const uniqueProducts = [...new Set(activeListings.map(listing => listing.product))].sort();
+        const uniqueProducts = [...new Set(active.map(listing => listing.product))].sort();
         setProducts(uniqueProducts);
         setNoActiveListings(false);
         setError('');
@@ -74,33 +78,26 @@ function WhereShoudISell() {
     loadLocations();
   }, []);
 
-  // Load units when product changes
+  // Load unit from active listing when product changes
   useEffect(() => {
     if (!formData.product) {
       setUnits([]);
       return;
     }
 
-    async function loadUnits() {
-      try {
-        const data = await getProductUnits(formData.product);
-        // Extract unit information
-        const unit = data?.unit || data?.data?.unit || '';
-        if (unit) {
-          setUnits([unit]);
-          // Auto-select the unit if there's only one
-          setFormData(prev => ({ ...prev, unit }));
-        } else {
-          setUnits([]);
-        }
-      } catch (err) {
-        console.error('Error loading units:', err);
-        setUnits([]);
-      }
-    }
+    // Find the first active listing for the selected product
+    const listing = activeListings.find(l => l.product === formData.product);
 
-    loadUnits();
-  }, [formData.product]);
+    if (listing && listing.unit) {
+      // Set unit from the listing and auto-select it
+      setUnits([listing.unit]);
+      setFormData(prev => ({ ...prev, unit: listing.unit }));
+    } else {
+      // No unit found in listing
+      setUnits([]);
+      setFormData(prev => ({ ...prev, unit: '' }));
+    }
+  }, [formData.product, activeListings]);
 
   function handleInputChange(field, value) {
     setFormData(prev => ({
@@ -219,7 +216,7 @@ function WhereShoudISell() {
               Unit
               <select
                 value={formData.unit}
-                onChange={(e) => handleInputChange('unit', e.target.value)}
+                disabled={true}
                 required
               >
                 <option value="">-- Select a unit --</option>
@@ -229,6 +226,7 @@ function WhereShoudISell() {
                   </option>
                 ))}
               </select>
+              {formData.unit && <small style={{display: 'block', marginTop: '4px', color: '#666'}}>Unit from your listing</small>}
             </label>
 
             <label>
