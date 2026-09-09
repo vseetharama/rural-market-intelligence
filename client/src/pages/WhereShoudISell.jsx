@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   compareMarkets,
-  getDistinctProducts,
+  getMyListings,
   getDistinctLocations,
   getProductUnits,
 } from '../services/api';
@@ -20,22 +20,35 @@ function WhereShoudISell() {
   const [comparisonResults, setComparisonResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [noActiveListings, setNoActiveListings] = useState(false);
 
-  // Load products on component mount
+  // Load farmer's active products on component mount
   useEffect(() => {
     async function loadProducts() {
       try {
-        const data = await getDistinctProducts();
-        // Extract distinct product names from the data
-        const productList = data.products && Array.isArray(data.products)
-          ? data.products
-          : data && Array.isArray(data)
-          ? data
+        const listings = await getMyListings();
+        
+        // Filter for ACTIVE listings only
+        const activeListings = Array.isArray(listings)
+          ? listings.filter(listing => listing.status === 'ACTIVE')
           : [];
-        setProducts(productList);
+
+        if (activeListings.length === 0) {
+          setNoActiveListings(true);
+          setProducts([]);
+          setError('No active products available. Create a listing first.');
+          return;
+        }
+
+        // Extract unique product names from active listings
+        const uniqueProducts = [...new Set(activeListings.map(listing => listing.product))].sort();
+        setProducts(uniqueProducts);
+        setNoActiveListings(false);
+        setError('');
       } catch (err) {
         console.error('Error loading products:', err);
-        setError('Unable to load products. Please refresh the page.');
+        setError('Unable to load your listings. Please refresh the page or log in.');
+        setNoActiveListings(true);
       }
     }
 
@@ -165,6 +178,11 @@ function WhereShoudISell() {
 
       {error && <p className="status-message error">{error}</p>}
 
+      {noActiveListings ? (
+        <section className="panel">
+          <p className="status-message error">No active products available. Create a listing first.</p>
+        </section>
+      ) : (
       <section className="panel">
         <h2>Compare Markets</h2>
         <form className="market-comparison-form" onSubmit={handleSubmit}>
@@ -241,6 +259,7 @@ function WhereShoudISell() {
           </div>
         </form>
       </section>
+      )}
 
       {loading && (
         <section className="panel">
